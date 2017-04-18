@@ -26,8 +26,8 @@ public class TestResource {
         System.out.println(counter.incrementAndGet());
         singleThread.submit(() -> {
             try {
-                Thread.sleep(Integer.MAX_VALUE);
-                asyncResponse.resume(Response.ok());
+                Thread.sleep(3000L);
+                asyncResponse.cancel();
             } catch (InterruptedException e) {
                 asyncResponse.resume(e);
             }
