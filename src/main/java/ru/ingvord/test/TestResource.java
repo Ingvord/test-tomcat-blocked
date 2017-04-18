@@ -4,6 +4,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Response;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -14,13 +19,18 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TestResource {
     private final AtomicLong counter = new AtomicLong(0L);
 
+    private final ExecutorService singleThread = Executors.newSingleThreadExecutor();
+
     @GET
-    public void get(){
+    public void get(final @Suspended AsyncResponse asyncResponse){
         System.out.println(counter.incrementAndGet());
-        try {
-            Thread.sleep(Integer.MAX_VALUE);
-        } catch (InterruptedException e) {
-            throw new WebApplicationException(e);
-        }
+        singleThread.submit(() -> {
+            try {
+                Thread.sleep(Integer.MAX_VALUE);
+                asyncResponse.resume(Response.ok());
+            } catch (InterruptedException e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 }
